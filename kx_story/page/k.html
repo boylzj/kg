@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>测试</title>
+</head>
+
+
+<body zoom="1" style="overflow:hidden;">
+
+    <div id="container" style="min-width:1200px;height:500px"></div>
+ 
+   
+    <script type="text/javascript" src="../js/jquery/jquery-1.8.3.min.js"></script>
+   <script type="text/javascript" src="http://static.hcharts.cn/highstock/highstock.js"></script>
+
+    <script type="text/javascript">
+    $(function () {
+	
+	Highcharts.setOptions({
+		lang: {
+			loading:'加载中...',
+		}
+	});
+	
+    $.getJSON('json.php?callback=?', function (data) {
+
+        // split the data set into ohlc and volume
+        var ohlc = [],
+            volume = [],
+            dataLength = data.length,
+    
+          
+            i = 0;
+
+        for (i; i < 100; i += 1) {
+            ohlc.push([
+                data[i][0], // the date
+                data[i][1], // open
+                data[i][2], // high
+                data[i][3], // low
+                data[i][4] // close
+            ]);
+
+            volume.push([
+                data[i][0], // the date
+                data[i][5] // the volume
+            ]);
+        }
+
+
+        // create the chart
+        $('#container').highcharts('StockChart', {
+			chart:{
+			  backgroundColor:'#000'
+			},
+            rangeSelector: {
+                selected: 1
+            },
+
+            title: {
+                text: '行情'
+            },
+
+            yAxis: [{
+                labels: {
+                    align: 'right',
+                    x: -3
+                },
+                gridLineWidth:1,
+				gridLineColor:'red',
+				gridLineDashStyle:'dot',
+                height: '70%',
+                lineWidth: 0
+            }, {
+                labels: {
+                    align: 'right',
+                    x: -3
+                },
+                title: {
+                    text: ''
+                },
+                top: '70%',
+                height: '30%',
+                offset: 0,
+                gridLineWidth:1,
+				gridLineColor:'red',
+				gridLineDashStyle:'dot',
+                
+                lineWidth: 0
+            }],
+			rangeSelector:{
+				enabled:false
+			},
+			scrollbar:{
+				enabled:false
+			},
+			navigator:{
+				enabled:false
+			},
+			//tooltip:{
+			//	dateTimeLabelFormats:{day:" %Y-%m-%e"}
+			//},
+			
+			
+			tooltip: {
+				formatter: function () {
+					var s = '<b>' + Highcharts.dateFormat('%Y-%m-%d', this.x) + '</b>';
+					//console.log(this);
+					var p1Str="";
+					var kdata = this.points[0].point;
+					 s +=  '<br/>开:' + kdata.open;
+					 s +=  '<br/>高:' + kdata.high;
+					 s +=  '<br/>低:' + kdata.low;
+					 s +=  '<br/>收:' + kdata.close;
+					 s +=  '<br/>量:' + this.points[1].y;
+					//$.each(this.points, function () {
+					//	s += '<br/>开 ' + this.y + ' EUR';
+					//});
+
+					return s;
+				}
+			},
+			credits:{
+				enabled:false
+			},
+			 xAxis: {
+				//tickColor: 'green',
+				//tickLength: 10,
+				tickWidth: 0,
+				labels:{enabled:false}
+				//tickPosition: 'inside'
+			},
+			plotOptions:{
+				candlestick:{
+					lineColor:'#00E5EE',
+					upLineColor:'red',
+					upColor:'#000',
+					color:'#00E5EE'
+				},
+				column:{
+					color:'red'
+				}
+			},
+            series: [{
+                type: 'candlestick',
+                name: '行情',
+                data: ohlc
+                
+            }, {
+                type: 'column',
+                name: '',
+                data: volume,
+                yAxis: 1,
+               
+            }]
+        });
+    });
+});
+    </script>
+</body>
+
+</html>
