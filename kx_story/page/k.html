@@ -14,10 +14,12 @@
  
    
     <script type="text/javascript" src="../js/jquery/jquery-1.8.3.min.js"></script>
-   <script type="text/javascript" src="http://static.hcharts.cn/highstock/highstock.js"></script>
+   <script type="text/javascript" src="../js/chars/highstock.js"></script>
 
     <script type="text/javascript">
     $(function () {
+	
+	
 	
 	Highcharts.setOptions({
 		lang: {
@@ -25,17 +27,42 @@
 		}
 	});
 	
-    $.getJSON('json.php?callback=?', function (data) {
+	
+	function requestData(){
+		 $.getJSON('json.php?callback=?', function (data) {
 
         // split the data set into ohlc and volume
         var ohlc = [],
             volume = [],
+			ma5 = [],
+			sum5 = 0,
+			ma10 = [],
+			sum10 = 0,
             dataLength = data.length,
     
           
             i = 0;
 
         for (i; i < 100; i += 1) {
+			sum5 +=  data[i][4]; //close
+			sum10 +=  data[i][4]; //close
+			
+			if(i >= 4){
+				ma5i =parseFloat((sum5/5).toFixed(2));
+				ma5.push([data[i][0],ma5i]) ;
+				sum5 -=   data[i-4][4];
+			}else{
+				ma5.push([data[i][0],null]) ;
+			}
+			
+			if(i >= 9){
+				ma10i =parseFloat((sum10/10).toFixed(2));
+				ma10.push([data[i][0],ma10i]) ;
+				sum10 -=   data[i-9][4];
+			}else{
+				ma10.push([data[i][0],null]) ;
+			}
+			
             ohlc.push([
                 data[i][0], // the date
                 data[i][1], // open
@@ -50,11 +77,25 @@
             ]);
         }
 
-
-        // create the chart
-        $('#container').highcharts('StockChart', {
+		//console.log(ma5);
+		the_chart.series[0].setData(ohlc);
+		the_chart.series[1].setData( volume);
+		the_chart.series[2].setData( ma5);
+		the_chart.series[3].setData( ma10);
+       // the_chart.redraw();
+		});
+	}
+	
+	// create the chart
+	//  $('#container').highcharts('StockChart', {
+   var the_chart = new Highcharts.StockChart({
+		   //container:$('#container'),
 			chart:{
-			  backgroundColor:'#000'
+				backgroundColor:'#000',
+				renderTo: 'container',
+				events: {
+				  load: requestData
+				}
 			},
             rangeSelector: {
                 selected: 1
@@ -106,20 +147,25 @@
 			
 			
 			tooltip: {
+				backgroundColor:'#000',
+				borderColor:'#fff',
+				borderWidth:0,
 				formatter: function () {
-					var s = '<b>' + Highcharts.dateFormat('%Y-%m-%d', this.x) + '</b>';
+					var s = '<b style="color:white">' + Highcharts.dateFormat('%Y-%m-%d', this.x) + '</b><br/>';
 					//console.log(this);
 					var p1Str="";
+					
 					var kdata = this.points[0].point;
-					 s +=  '<br/>开:' + kdata.open;
-					 s +=  '<br/>高:' + kdata.high;
-					 s +=  '<br/>低:' + kdata.low;
-					 s +=  '<br/>收:' + kdata.close;
-					 s +=  '<br/>量:' + this.points[1].y;
-					//$.each(this.points, function () {
-					//	s += '<br/>开 ' + this.y + ' EUR';
-					//});
-
+					var colorstr = (kdata.close >= kdata.open) ? kdata.series.options.upLineColor : "green" ;
+				
+					 s +=  '<span style="color:white">开:</span><span style="color:'+ colorstr +';float:right;">' + kdata.open + '</span><br/>';
+					 s +=  '<span style="color:white">高:</span><span style="color:'+ colorstr +';float:right;">'+ kdata.high + '</span><br/>';
+					 s +=  '<span style="color:white">低:</span><span style="color:'+ colorstr +';float:right;">'+ kdata.low + '</span><br/>';
+					 s +=  '<span style="color:white">收:</span><span style="color:'+ colorstr +';float:right;">' + kdata.close + '</span><br/>';
+					 if(this.points.length>1){
+						s +=  '<span style="color:white">量:' + this.points[1].y + '</span>';
+					 }
+														
 					return s;
 				}
 			},
@@ -146,18 +192,50 @@
 			},
             series: [{
                 type: 'candlestick',
-                name: '行情',
-                data: ohlc
+                name: ''
+                //data: ohlc
                 
-            }, {
+            },{
                 type: 'column',
                 name: '',
-                data: volume,
+               // data: volume,
                 yAxis: 1,
                
+            }, {
+                type: 'line',
+                name: '',
+                //data: ma5,
+				lineWidth:1,
+				//enableMouseTracking:false,
+				//animation:false,
+				states:{
+					hover:{
+						enabled:false
+					
+					}
+				},
+                color:"white"
+            }, {
+                type: 'line',
+                name: '',
+               // data: ma10,
+				lineWidth:1,
+				//enableMouseTracking:false,
+				//animation:false,
+				states:{
+					hover:{
+						enabled:false
+					
+					}
+				},
+                color:"yellow"
             }]
         });
-    });
+	console.log(the_chart);
+   
+	
+	
+	 
 });
     </script>
 </body>
