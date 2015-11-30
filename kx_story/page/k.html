@@ -27,6 +27,56 @@
 		}
 	});
 	
+	function flashData() {
+       $.ajax({
+			 url: 'data.php',
+			  success: function(point) {
+				  var series = chart.series[0],
+					  shift = series.data.length > 100; // shift if the series is longer than 100
+				 
+				 var kpoint = [], // kiline point
+					 ma5 = [],    // ma5
+					 ma10 = [],   // ma6
+					 vpoint = []; // volumn point
+				 
+				 kpoint.push(
+						point[0], // the date
+						point[1], // open
+						point[2], // high
+						point[3], // low
+						point[4] // close
+							 );
+				 
+				 vpoint.push(
+							  point[0], // the date
+							  point[5] // the volume
+							 );
+				 
+				 //ma5 ma10
+				 var mlen = series.data.length;
+				 var lastMa =  chart.series[2].data[mlen-1];
+				 
+				 ma5v = parseFloat(((chart.series[2].data[mlen-1] * 5 - chart.series[2].data[mlen-5] + point[4]) / 5).toFixed(2)) ;
+				 ma10v = parseFloat(((chart.series[3].data[mlen-1] * 10 - chart.series[2].data[mlen-10] + point[4]) / 10).toFixed(2))
+				 
+				 ma5.push(point[0],ma5v);
+				 ma10.push(point[0],ma10v);
+				 
+				 
+				 // add the point
+				 chart.series[0].addPoint(kpoint[0], true, shift);
+				 chart.series[1].addPoint(vpoint[0], true, shift);
+				 chart.series[2].addPoint(ma5[0], true, shift);
+				 chart.series[3].addPoint(ma10[0], true, shift);
+				 
+				 console.log(chart);
+				 // call it again after one second
+				 setTimeout(requestData, 2000);
+				
+			 },
+			 cache: false
+			});
+    }
 	
 	function requestData(){
 		 $.getJSON('json.php?callback=?', function (data) {

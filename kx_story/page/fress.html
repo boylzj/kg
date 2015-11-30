@@ -4,7 +4,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1,user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>²âÊÔ</title>
+    <title>æµ‹è¯•</title>
 </head>
 
 
@@ -22,13 +22,24 @@
 			 url: 'fressh.php',
 			  success: function(point) {
 				  var series = chart.series[0],
-					  shift = series.data.length > 20; // shift if the series is longer than 20
-
+					  shift = series.data.length > 30; // shift if the series is longer than 20
+				   if (shift) {
+                    //  chart.xAxis.max= point[0];
+					  
+                   }else{
+						 //chart.xAxis.min = point[0]  + 30 * 1000;
+						 //chart.xAxis.min = series.data.length > 0 ? series.data[0] :point[0]
+						// chart.series[0].pointRange =  30 * 1000;
+						// chart.series[0].pointStart = point[0];
+						 //chart.xAxis[0].minPointOffset = point[0];
+				   }
 				 // add the point
 				 chart.series[0].addPoint(point, true, shift);
 				 
+				 console.log(chart);
 				 // call it again after one second
-				 setTimeout(requestData, 1000);    
+				 setTimeout(requestData, 2000);
+				
 			 },
 			 cache: false
 			});
@@ -49,11 +60,17 @@
          xAxis: {
              type: 'datetime',
              tickPixelInterval: 150,
-             maxZoom: 20 * 1000
+			 labelAlign:'left',
+			 minRange :30
+			// min: 0
+			 //max:30,
+			// zoomEnabled : false,
+            // maxZoom: 30 * 1000
          },
          yAxis: {
              minPadding: 0.2,
              maxPadding: 0.2,
+			 
              title: {
                  text: 'Value',
                  margin: 80
@@ -61,6 +78,7 @@
          },
          series: [{
              name: 'Random data',
+			 
              data: []
          }]
      });        
