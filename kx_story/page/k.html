@@ -17,6 +17,8 @@
    <script type="text/javascript" src="../js/chars/highstock.js"></script>
 
     <script type="text/javascript">
+		var the_chart;
+		var c = 101;
     $(function () {
 	
 	
@@ -28,10 +30,11 @@
 	});
 	
 	function flashData() {
+	   turl = 'new_data.php?c=' + c;
        $.ajax({
-			 url: 'data.php',
+			 url: turl,
 			  success: function(point) {
-				  var series = chart.series[0],
+				  var series = the_chart.series[0],
 					  shift = series.data.length > 100; // shift if the series is longer than 100
 				 
 				 var kpoint = [], // kiline point
@@ -54,24 +57,34 @@
 				 
 				 //ma5 ma10
 				 var mlen = series.data.length;
-				 var lastMa =  chart.series[2].data[mlen-1];
+				 var lastMa5 =  the_chart.series[2].yData[mlen-1];
+				 var lastMa10 =  the_chart.series[3].yData[mlen-1];
+				 var last5c = the_chart.series[0].yData[mlen-5][3]; //前数第5个数 CLOSE
+				 var last10c = the_chart.series[0].yData[mlen-10][3]; //前数第10个数 CLOSE
+				 //console.log(the_chart.series[0].yData);
 				 
-				 ma5v = parseFloat(((chart.series[2].data[mlen-1] * 5 - chart.series[2].data[mlen-5] + point[4]) / 5).toFixed(2)) ;
-				 ma10v = parseFloat(((chart.series[3].data[mlen-1] * 10 - chart.series[2].data[mlen-10] + point[4]) / 10).toFixed(2))
+				 ma5v = parseFloat(((lastMa5 * 5 - last5c + point[4]) / 5).toFixed(2)) ; //新5日线数
+				 ma10v = parseFloat(((lastMa10 * 10 - last10c + point[4]) / 10).toFixed(2)); //原5日线数
 				 
 				 ma5.push(point[0],ma5v);
 				 ma10.push(point[0],ma10v);
 				 
 				 
 				 // add the point
-				 chart.series[0].addPoint(kpoint[0], true, shift);
-				 chart.series[1].addPoint(vpoint[0], true, shift);
-				 chart.series[2].addPoint(ma5[0], true, shift);
-				 chart.series[3].addPoint(ma10[0], true, shift);
+				 the_chart.series[0].addPoint(kpoint, true, shift);
+				 the_chart.series[1].addPoint(vpoint, true, shift);
+				 the_chart.series[2].addPoint(ma5, true, shift);
+				 the_chart.series[3].addPoint(ma10, true, shift);
 				 
-				 console.log(chart);
+				 //set counter value
+				 
+				// console.log("volue of c is :" + c);
+				 c = c+1;
 				 // call it again after one second
-				 setTimeout(requestData, 2000);
+				 if (c <= 150) {
+                    setTimeout(flashData, 2000);
+                 }
+				 //setTimeout(requestData, 2000);
 				
 			 },
 			 cache: false
@@ -79,7 +92,7 @@
     }
 	
 	function requestData(){
-		 $.getJSON('json.php?callback=?', function (data) {
+		 $.getJSON('k_data.php?callback=?', function (data) {
 
         // split the data set into ohlc and volume
         var ohlc = [],
@@ -93,7 +106,7 @@
           
             i = 0;
 
-        for (i; i < 100; i += 1) {
+        for (i; i < dataLength; i += 1) {
 			sum5 +=  data[i][4]; //close
 			sum10 +=  data[i][4]; //close
 			
@@ -133,12 +146,15 @@
 		the_chart.series[2].setData( ma5);
 		the_chart.series[3].setData( ma10);
        // the_chart.redraw();
+	   
+	   //start the fresh task
+	   setTimeout(flashData, 5000);
 		});
 	}
 	
 	// create the chart
 	//  $('#container').highcharts('StockChart', {
-   var the_chart = new Highcharts.StockChart({
+    the_chart = new Highcharts.StockChart({
 		   //container:$('#container'),
 			chart:{
 				backgroundColor:'#000',
@@ -281,7 +297,7 @@
                 color:"yellow"
             }]
         });
-	console.log(the_chart);
+	//console.log(the_chart);
    
 	
 	
