@@ -39,11 +39,9 @@ var minStockChart = function(divID, data, isShowMean) {
 				columnColor = "#00a800"
 			}
 		}
-		
-		//量线数据
 		columnData.push({
 			x : dateUTC,
-			y : priceArr[2],
+			y : priceArr[4],
 			color : columnColor
 		});
 		
@@ -101,9 +99,8 @@ var minStockChart = function(divID, data, isShowMean) {
 	return chart = new Highcharts.StockChart(
 			{
 				credits:{
-					enabled:false,
-					text:'',               // 显示的文字
-					href:'',   // 链接地址
+					text:'@epianhong.com',               // 显示的文字
+					href:'http://app.epianhong.com',   // 链接地址
 					position:{                          // 位置设置
 						align: 'left',
 						x: 10,
