@@ -121,7 +121,7 @@ $min_data = array(
     $c = $_REQUEST['c']; // the data ;
     $callback = $_REQUEST['callback'];
     echo "$callback({'data':[" ;
-    echo "[\"$date_now\"],";
+   // echo "[\"$date_now\"],";
     for($i = 0; $i<$c; $i++){
         $item = $min_data[$i];
         echo "[\"${item[0]}\",${item[1]},${item[2]}]";

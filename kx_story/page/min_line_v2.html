@@ -18,12 +18,27 @@
 	<script type="text/javascript" src="min.js"></script>
    
    <script type="text/javascript">
+/**
+ * tools
+ * @param val
+ * @returns
+ */
+function fixValue(val) {
+	if (val < 100) {
+		return parseFloat(val.toFixed(2));
+	}
+	if(val < 1000) {
+		return parseFloat(val.toFixed(1));
+	}
+	return parseFloat(val.toFixed(0));
+}
 
 	var minchart;
 	var last_close;
 	var min_data = [], avg_data=[], vol_data=[];
 	var xlabels = ["09:30","09:31","09:32","09:33","09:34","09:35","09:36","09:37","09:38","09:39","09:40","09:41","09:42","09:43","09:44","09:45","09:46","09:47","09:48","09:49","09:50","09:51","09:52","09:53","09:54","09:55","09:56","09:57","09:58","09:59","10:00","10:01","10:02","10:03","10:04","10:05","10:06","10:07","10:08","10:09","10:10","10:11","10:12","10:13","10:14","10:15","10:16","10:17","10:18","10:19","10:20","10:21","10:22","10:23","10:24","10:25","10:26","10:27","10:28","10:29","10:30","10:31","10:32","10:33","10:34","10:35","10:36","10:37","10:38","10:39","10:40","10:41","10:42","10:43","10:44","10:45","10:46","10:47","10:48","10:49","10:50","10:51","10:52","10:53","10:54","10:55","10:56","10:57","10:58","10:59","11:00","11:01","11:02","11:03","11:04","11:05","11:06","11:07","11:08","11:09","11:10","11:11","11:12","11:13","11:14","11:15","11:16","11:17","11:18","11:19","11:20","11:21","11:22","11:23","11:24","11:25","11:26","11:27","11:28","11:29","11:30/13:00","13:01","13:02","13:03","13:04","13:05","13:06","13:07","13:08","13:09","13:10","13:11","13:12","13:13","13:14","13:15","13:16","13:17","13:18","13:19","13:20","13:21","13:22","13:23","13:24","13:25","13:26","13:27","13:28","13:29","13:30","13:31","13:32","13:33","13:34","13:35","13:36","13:37","13:38","13:39","13:40","13:41","13:42","13:43","13:44","13:45","13:46","13:47","13:48","13:49","13:50","13:51","13:52","13:53","13:54","13:55","13:56","13:57","13:58","13:59","14:00","14:01","14:02","14:03","14:04","14:05","14:06","14:07","14:08","14:09","14:10","14:11","14:12","14:13","14:14","14:15","14:16","14:17","14:18","14:19","14:20","14:21","14:22","14:23","14:24","14:25","14:26","14:27","14:28","14:29","14:30","14:31","14:32","14:33","14:34","14:35","14:36","14:37","14:38","14:39","14:40","14:41","14:42","14:43","14:44","14:45","14:46","14:47","14:48","14:49","14:50","14:51","14:52","14:53","14:54","14:55","14:56","14:57","14:58","14:59","15:00","15:01"];
-    
+    var MaxDataLength = 241;
+	
 	/**
 	 * 分时线数据图表
 	 * @param  container DIV图表容器
@@ -33,27 +48,249 @@
 		last_close = data.last_close; //昨收，已确定最大最小值
 		
 		var all_data = data.data;
-		data_length = all_data.length;
+		var avgsum = 0, avgvolsum=0;
+		var data_length = all_data.length;
 		//组装数据 data format is  [date,price,agv,vol]
-		for (var h = 0; h < 241; h++) {
+		for (var h = 0; h < MaxDataLength; h++) {
 			//保正点有241个，用于显示全图
 			if (h<data_length) {
 					//分时线数据
 					min_data.push(all_data[h][1]);	 //price
 					//均线数据
-					avg_data.push(all_data[h][2]);  //avg						
+					avgvolsum = avgvolsum + all_data[h][3];
+					avgsum = avgsum + all_data[h][1] * all_data[h][3];
+					avg_data.push(Math.round(avgsum/avgvolsum));  //avg						
 					//量线数据
 					vol_data.push(all_data[h][3]);  //val
             }else{
 				min_data.push(null);	 //price
-			}
-		
-			
+			}		
 			
 		}
+		
+		console.log(min_data);
+		
+		return minchart = new Highcharts.StockChart({
+				credits:{
+					enabled:false //去掉版权信息
+				},
+				//去掉日期选择
+				rangeSelector : {
+					enabled:false,
+				    selected: 4,
+				    buttonTheme: {
+				        visibility: 'hidden'
+				    },
+				    labelStyle: {
+				        visibility: 'hidden'
+				    },
+					inputEnabled : false,
+					inputDateFormat : '%Y-%m-%d' // 设置右上角的日期格式
+				},
+				chart : {
+					renderTo : container,
+					events : {
+						load : function(chart) {
+						}
+					}
+				},
+				yAxis : [
+					{
+						labels : { //行情左
+								align : 'left', //文字的左右对齐，左对齐的时候，数值会放到y轴右侧
+								x : 2,
+								useHTML : true,
+								formatter : function() {
+									//上下10%
+									var percentVal = Math.round((this.value - last_close)/ last_close* 10000) / 100;
+									//var offsetx = 960 - percentVal.toString().length * 7;
+									var offsetx = $("#"+container).width() - 40 - percentVal.toString().length * 7;
+									if(this.value > last_close)
+									{
+										return '<span style="color: #DD2200;">' + this.value + '</span><span style="position: absolute;left: ' + offsetx + 'px;color: #DD2200;">' + percentVal + '%</span>';
+									}
+									else if(this.value < last_close)
+									{
+										return '<span style="color: #33AA11;">' + this.value + '</span><span style="position: absolute;left: ' + offsetx + 'px;color: #33AA11;">' + percentVal + '%</span>';
+									}
+									return '<span style="color: #aaaaaa;">' + this.value + '</span><span style="position: absolute;left: ' + offsetx + 'px;color: #aaaaaa;">' + percentVal + '%</span>';;
+								}
+							},
+							height : '60%',
+							lineWidth : 2,
+							opposite : false,//是否把它显示到另一边（右边）
+							lineWidth : 1,// Y轴边缘线条粗细
+							gridLineColor : '#346691',
+							gridLineWidth : 0.1,
+							tickColor : "#ff000",
+							tickWidth : 2 ,
+							tickPositioner : function() { //手动计算主刻度线的位置								
+								var middleLine = last_close;
+								
+								//var maxAmplitude = Math.floor(Math.max(Math.abs(this.dataMax - middleLine),Math.abs(this.dataMin - middleLine))*100)/100 * 0.5;//四舍五入保留两位小数
+								var maxAmplitude = last_close * 0.05;//四舍五入保留两位小数
+				
+								positions = [];
+								yminV = fixValue(middleLine - maxAmplitude);
+								ymaxV = fixValue(middleLine + maxAmplitude);
+								
+							    console.log(yminV + " MAX " + ymaxV);
+								
+								positions.push(yminV);
+								positions.push(fixValue(middleLine - maxAmplitude / 2));
+								positions.push(middleLine);
+								positions.push(fixValue(middleLine + maxAmplitude / 2));
+								positions.push(ymaxV);
+								return positions;
+							}
+					},
+					{
+						labels : { //交易量
+								align : 'left',
+								x : -3,
+								y : 8,
+								formatter : function() {
+									if (this.value == 0) {
+										return 0
+									} else if (this.value >= 10000)
+										return this.value / 10000 + "万"
+									else if (this.value >= 100000000)
+										return this.value / 100000000 + "亿"
+									return this.value
+								},
+								style : {
+									fontSize : '6px',
+									color : '#aaaaaa',
+								}
+							},
+							top : '70%',
+							height : '30%',
+							offset : 0,
+							showLastLabel : true,
+							lineWidth : 2,
+							opposite : false ,
+							tickPositioner : function() {
+								var dataMaxBits = Math.pow(10,
+										(String(this.dataMax).length - 1)), axisMax = this.dataMax > 10 ? Math
+										.ceil(this.dataMax / dataMaxBits)
+										* dataMaxBits
+										: 10, positions = [ 0, axisMax / 2,
+										this.dataMax ];
+
+								return positions
+							}
+					}
+					
+				],
+				xAxis : { //
+					endOnTick : false,
+					minorTickInterval : 'auto',//设置是否出现小的纵向网格线（此标尺显示在图标数据区）
+					minorGridLineColor : '#f0f0f0', //上面参数的线的颜色
+					tickPixelInterval : 150,//设置横坐标刻度线的密度（包括网格线的横向密度）
+					showFirstLabel : true,
+					categories : xlabels,					
+            
+					events : {
+						afterSetExtremes : function(e) {
+							//e.max = Date.UTC(2014,11,5,19,0)
+						}
+					}
+					//offset: -136,
+				},
+				tooltip : {
+					//数据提示框的格式化
+					formatter : function() {
+						var zs = last_close;
+						//var transactionprice =  datamap[this.points[0].point.x].transactionprice;
+						var transactionprice =  min_data[this.points[0].point.x];
+						//var pricechangeratio = Math.round(datamap[this.points[0].point.x].pricechangeratio / zs * 10000) / 100 + "%";
+						//var transactioncount = datamap[this.points[0].point.x].transactioncount;
+						var transactioncount = vol_data[this.points[0].point.x];
+						//var mean = datamap[this.points[0].point.x].mean;
+						var tip = '<b>'
+							//+ Highcharts.dateFormat('%H:%M', datamap[this.points[0].point.x].date)
+							+ xlabels[this.points[0].point.x]
+							+ '</b><br/>';
+						if (transactionprice > zs) {
+							tip += '当前价：<span style="color: #DD2200;">' + transactionprice
+									+ ' </span><br/>';
+						} else {
+							tip += '当前价：<span style="color: #33AA11;">' + transactionprice
+									+ ' </span><br/>';
+						}
+						
+						
+						tip += "成交量：" + transactioncount + "<br/>";
+						return tip;
+					}
+				},
+
+				scrollbar : {
+					enabled : false
+				//隐藏滚动条
+				},
+
+				navigator : {
+					enabled : false
+					//隐藏全局数据条
+				},
+				series : [
+					{
+						type : 'line',
+						name : '平均价',
+						//data : avg_data,
+						color : '#fea000',
+						dataGrouping : {
+							enabled : false,
+							forced : true
+						}
+					},
+					{
+						name : '价格',
+						data : min_data,
+						tooltip : {
+							valueDecimals : 2
+						//小数数量
+						},
+						dataGrouping : { //把数据合并，比如纵向的位置显示不了所有数据了，会把其中一些数据点合并成一个，数值可以计算为两个数据的平均值，也可以计算为两个数据之和
+							enabled : false,
+							forced : true
+						}
+					}, {
+						type : 'column',
+						name : '交易量',
+						//data : vol_data,
+						yAxis : 1,
+						tooltip : {
+							valueDecimals : 0,
+							valueSuffix : "手"
+						},
+						dataGrouping : {
+							enabled : false,
+							forced : true
+						}
+					}
+				]
+				
+		});
 	}
 	
     
+	 //向服务器发送ajax请求
+	function request(req) {
+		console.log(req);
+		$.getJSON(req, function(data) {
+				//var data = eval("(" + data + ")");
+				console.log(data);
+				new MINStockChart("container", data, true);
+			}
+		);
+	};
+	
+	$(function() {
+		request("min_line_v2.php?c=20&callback=?");
+	});
+	
    </script>
    
    </body>
